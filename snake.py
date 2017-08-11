@@ -69,7 +69,7 @@ class Food(object):
     def remove(self):
         self.pos = None
         self.total += 1
-        
+
     def get_total(self):
         return self.total
 
@@ -110,11 +110,11 @@ def advance_game(snake, food):
         food.remove()
         make_snake_longer = True
 
-    snake.move_it(make_snake_longer)                
+    snake.move_it(make_snake_longer)
 
 def is_game_over(snake, screen_size):
     return wall_hit(snake.head(), screen_size) or snake.hit_itself()
-    
+
 def paint_snake(surface, snake):
     snake_color = (0, 204, 0)
     for s in snake.get_pos():
@@ -129,10 +129,10 @@ def paint_text(surface, text):
     font = pygame.font.SysFont("verdana", 12)
     label = font.render(text, 0, (255, 255, 255))
     surface.blit(label, (0, 0))
-        
+
 def get_current_time():
     return int(round(time.time() * 1000))
-    
+
 def play_game():
     pygame.init()
     screen = Screen(10, 10, 600, 400)
@@ -143,6 +143,7 @@ def play_game():
     game_over = False
     bg_red = 0
     text = ""
+
     # main game loop
     while True:
         handle_event_loop(snake)
@@ -165,10 +166,10 @@ def play_game():
         paint_snake(surface, snake)
         paint_food(surface, food)
         pygame.display.flip()
-    
+
 
 def main():
-    while True:    
+    while True:
         play_game()
 
 if __name__ == "__main__":
