@@ -28,7 +28,7 @@ class Snake(object):
     def get_pos(self):
         return self.body
 
-    def move(self, left=0, right=0, up=0, down=0):
+    def set_direction(self, left=0, right=0, up=0, down=0):
         self.left = left
         self.right = right
         self.up = up
@@ -89,13 +89,13 @@ def handle_event_loop(snake):
         if event.type == pygame.QUIT: sys.exit()
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
-                snake.move(left=1)
+                snake.set_direction(left=1)
             elif event.key == pygame.K_RIGHT:
-                snake.move(right=1)
+                snake.set_direction(right=1)
             elif event.key == pygame.K_UP:
-                snake.move(up=1)
+                snake.set_direction(up=1)
             elif event.key == pygame.K_DOWN:
-                snake.move(down=1)
+                snake.set_direction(down=1)
 
 def paint_snake(screen, snake):
     snake_color = (0, 204, 0)
@@ -124,29 +124,35 @@ def get_current_time():
     return int(round(time.time() * 1000))
 
 def play_game():
+    pygame.init()
     screen = Screen(10, 10, 600, 400)
     surface = pygame.display.set_mode(screen.get_screen_size())
-    prev_time = 0
+    prev_time = None
     snake = Snake(screen)
     food = Food(screen)
+    game_over = False
+    bg_red = 0
     while True:
         handle_event_loop(snake)
         current_time = get_current_time()
-        if (current_time - prev_time > 50):
+        if not prev_time or (current_time - prev_time > 50):
             prev_time = current_time
-            advance_game(snake, food)
-            if is_game_over(snake, screen.get_screen_size()): break
+            if not game_over:
+                advance_game(snake, food)
+                if is_game_over(snake, screen.get_screen_size()): game_over = True
+            else:
+                bg_red += 30
+                if bg_red > 150: break
 
         # frame rendering
-        bg_color = (0, 0, 0)
-        surface.fill(bg_color)
+        surface.fill((bg_red, 0, 0))
         paint_snake(surface, snake)
         paint_food(surface, food)
         pygame.display.flip()
+    
 
 def main():
-    while True:
-        pygame.init()
+    while True:    
         play_game()
 
 if __name__ == "__main__":
