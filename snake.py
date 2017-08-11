@@ -58,6 +58,7 @@ class Food(object):
     def __init__(self, screen):
         self.screen = screen
         self.pos = None
+        self.total = 0
 
     def get_pos(self):
         return self.pos
@@ -67,6 +68,10 @@ class Food(object):
 
     def remove(self):
         self.pos = None
+        self.total += 1
+        
+    def get_total(self):
+        return self.total
 
     def place_if_missing(self):
         if not self.exists():
@@ -97,16 +102,6 @@ def handle_event_loop(snake):
             elif event.key == pygame.K_DOWN:
                 snake.set_direction(down=1)
 
-def paint_snake(screen, snake):
-    snake_color = (0, 204, 0)
-    for s in snake.get_pos():
-        pygame.draw.rect(screen, snake_color, s)
-
-def paint_food(screen, food):
-    if food.exists():
-        food_color = (225, 49, 76)
-        pygame.draw.rect(screen, food_color, food.get_pos())
-
 def advance_game(snake, food):
     food.place_if_missing()
     make_snake_longer = False
@@ -115,14 +110,29 @@ def advance_game(snake, food):
         food.remove()
         make_snake_longer = True
 
-    snake.move_it(make_snake_longer)
+    snake.move_it(make_snake_longer)                
 
 def is_game_over(snake, screen_size):
     return wall_hit(snake.head(), screen_size) or snake.hit_itself()
+    
+def paint_snake(surface, snake):
+    snake_color = (0, 204, 0)
+    for s in snake.get_pos():
+        pygame.draw.rect(surface, snake_color, s)
 
+def paint_food(surface, food):
+    if food.exists():
+        food_color = (225, 49, 76)
+        pygame.draw.rect(surface, food_color, food.get_pos())
+
+def paint_text(surface, text):
+    font = pygame.font.SysFont("verdana", 12)
+    label = font.render(text, 0, (255, 255, 255))
+    surface.blit(label, (0, 0))
+        
 def get_current_time():
     return int(round(time.time() * 1000))
-
+    
 def play_game():
     pygame.init()
     screen = Screen(10, 10, 600, 400)
@@ -132,6 +142,8 @@ def play_game():
     food = Food(screen)
     game_over = False
     bg_red = 0
+    text = ""
+    # main game loop
     while True:
         handle_event_loop(snake)
         current_time = get_current_time()
@@ -139,13 +151,17 @@ def play_game():
             prev_time = current_time
             if not game_over:
                 advance_game(snake, food)
-                if is_game_over(snake, screen.get_screen_size()): game_over = True
+                text = "SCORE={}".format(food.get_total())
+                if is_game_over(snake, screen.get_screen_size()):
+                    game_over = True
+                    text += " GAME OVER"
             else:
                 bg_red += 30
                 if bg_red > 150: break
 
         # frame rendering
         surface.fill((bg_red, 0, 0))
+        paint_text(surface, text)
         paint_snake(surface, snake)
         paint_food(surface, food)
         pygame.display.flip()
