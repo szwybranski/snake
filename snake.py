@@ -127,7 +127,7 @@ def paint_food(surface, food):
 
 def paint_text(surface, text):
     font = pygame.font.SysFont("verdana", 12)
-    label = font.render(text, 0, (255, 255, 255))
+    label = font.render(text, 0, (200, 200, 200))
     surface.blit(label, (0, 0))
 
 def get_current_time():
@@ -143,6 +143,7 @@ def play_game():
     game_over = False
     bg_red = 0
     text = ""
+    frames = []
 
     # main game loop
     while True:
@@ -152,21 +153,21 @@ def play_game():
             prev_time = current_time
             if not game_over:
                 advance_game(snake, food)
-                text = "SCORE={}".format(food.get_total())
                 if is_game_over(snake, screen.get_screen_size()):
                     game_over = True
-                    text += " GAME OVER"
             else:
                 bg_red += 30
                 if bg_red > 150: break
 
         # frame rendering
         surface.fill((bg_red, 0, 0))
+        text = "score={}, fps={}".format(food.get_total(), len(frames))
         paint_text(surface, text)
         paint_snake(surface, snake)
         paint_food(surface, food)
         pygame.display.flip()
-
+        frames = [ current_time ] + frames
+        while frames and (current_time - frames[-1] > 1000): del frames[-1]
 
 def main():
     while True:
