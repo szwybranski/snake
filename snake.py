@@ -20,18 +20,24 @@ right = 0
 up = 0
 down = 0
 
-# initial snake (5 rectangles)
-snake = [ pygame.Rect(400+width*0, 300, width, height),
-          pygame.Rect(400+width*1, 300, width, height),
-          pygame.Rect(400+width*2, 300, width, height),
-          pygame.Rect(400+width*3, 300, width, height),
-          pygame.Rect(400+width*4, 300, width, height) ]
-
+make_snake = lambda x: pygame.Rect(400+width*x, 300, width, height)
+snake = None
 food = None
 make_snake_longer = False
 get_current_time = lambda: int(round(time.time() * 1000))
-prev_time = get_current_time()
-time_to_move = True
+prev_time = None
+time_to_move = None
+
+def initialize():
+    global left, right, up, down, snake, food, prev_time, time_to_move
+    left = 1
+    right = 0
+    up = 0
+    down = 0
+    snake = [ make_snake(0), make_snake(1), make_snake(2), make_snake(3), make_snake(4) ]
+    food = None
+    prev_time = get_current_time()
+    time_to_move = True
 
 def move(l=0, r=0, u=0, d=0):
     global left, right, up, down
@@ -106,19 +112,28 @@ def advance_game():
         food = None
         make_snake_longer = True
 
-    # check for game over collisions
-    if wall_hit(snake[0]) or snake_hit_itself(snake): sys.exit()
+def is_game_over():
+    return wall_hit(snake[0]) or snake_hit_itself(snake)
 
-while True:
-    handle_event_loop()
+def main():
+    global prev_time, current_time
+    while True:
+        initialize()
+        while True:
+            handle_event_loop()
 
-    current_time = get_current_time()
-    if (current_time - prev_time > 50):
-        prev_time = current_time
-        advance_game()
+            current_time = get_current_time()
+            if (current_time - prev_time > 50):
+                prev_time = current_time
+                advance_game()
+                if is_game_over(): break
 
-    # frame rendering
-    screen.fill(bg_color)
-    paint_snake()
-    paint_food()
-    pygame.display.flip()
+            # frame rendering
+            screen.fill(bg_color)
+            paint_snake()
+            paint_food()
+            pygame.display.flip()
+
+if __name__ == "__main__":
+    main()
+
