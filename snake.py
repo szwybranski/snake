@@ -144,15 +144,17 @@ def play_game():
     bg_red = 0
     text = ""
     frames = []
+    game_speed = 0
 
     # main game loop
     while True:
         handle_event_loop(snake)
         current_time = get_current_time()
-        if not prev_time or (current_time - prev_time > 50):
+        if not prev_time or (current_time - prev_time > (50 - game_speed)):
             prev_time = current_time
             if not game_over:
                 advance_game(snake, food)
+                game_speed = min(food.get_total(), 20)
                 if is_game_over(snake, screen.get_screen_size()):
                     game_over = True
             else:
@@ -161,11 +163,13 @@ def play_game():
 
         # frame rendering
         surface.fill((bg_red, 0, 0))
-        text = "score={}, fps={}".format(food.get_total(), len(frames))
+        text = "score={}, fps={}, speed={}".format(food.get_total(), len(frames), game_speed)
         paint_text(surface, text)
         paint_snake(surface, snake)
         paint_food(surface, food)
         pygame.display.flip()
+        
+        # leave timestamps generated during last second, length of this array = fps
         frames = [ current_time ] + frames
         while frames and (current_time - frames[-1] > 1000): del frames[-1]
 
