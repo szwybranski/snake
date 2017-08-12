@@ -168,7 +168,7 @@ def play_game():
         paint_snake(surface, snake)
         paint_food(surface, food)
         pygame.display.flip()
-        
+
         # leave timestamps generated during last second, length of this array = fps
         frames = [ current_time ] + frames
         while frames and (current_time - frames[-1] > 1000): del frames[-1]
