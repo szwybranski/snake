@@ -2,17 +2,18 @@ import sys, pygame, time
 from random import randint
 
 class Screen(object):
-    def __init__(self, block_width, block_height, screen_width, screen_height):
-        self.block_width = block_width
-        self.block_height = block_height
+    def __init__(self, screen_width, screen_height, block_size):
+        assert(screen_width % block_size == 0)
+        assert(screen_height % block_size == 0)
         self.screen_width = screen_width
         self.screen_height = screen_height
+        self.block_size = block_size
 
     def get_screen_size(self):
         return (self.screen_width, self.screen_height)
 
     def get_block_size(self):
-        return (self.block_width, self.block_height)
+        return (self.block_size)
 
 class Snake(object):
     def __init__(self, screen):
@@ -20,9 +21,10 @@ class Snake(object):
         self.right = 0
         self.up = 0
         self.down = 0
-        screen_size = screen.get_screen_size()
-        self.width, self.height = screen.get_block_size()
-        make_snake = lambda x: pygame.Rect(screen_size[0]/2+self.width*x, screen_size[1]/2, self.width, self.height)
+        self.screen = screen
+        start_x = self.screen.get_screen_size()[0]/2 - (self.screen.get_screen_size()[0]/2) % self.screen.get_block_size()
+        start_y = self.screen.get_screen_size()[1]/2 - (self.screen.get_screen_size()[1]/2) % self.screen.get_block_size()
+        make_snake = lambda x: pygame.Rect(start_x + self.screen.get_block_size() * x, start_y, self.screen.get_block_size(), self.screen.get_block_size())
         self.body = [ make_snake(0), make_snake(1), make_snake(2), make_snake(3), make_snake(4) ]
 
     def get_pos(self):
@@ -44,12 +46,18 @@ class Snake(object):
             seen.update({(s.x,s.y)})
         return False
 
+    def hit_wall(self):
+        return (self.head().x < 0
+                or self.head().x > self.screen.get_screen_size()[0]
+                or self.head().y < 0
+                or self.head().y > self.screen.get_screen_size()[1])
+
     def move_it(self, make_snake_longer):
-        head = pygame.Rect.copy(self.body[0])
-        if self.left: head.x -= self.width
-        elif self.right: head.x += self.width
-        elif self.up: head.y -= self.height
-        elif self.down: head.y += self.height
+        head = pygame.Rect.copy(self.head())
+        if self.left: head.x -= self.screen.get_block_size()
+        elif self.right: head.x += self.screen.get_block_size()
+        elif self.up: head.y -= self.screen.get_block_size()
+        elif self.down: head.y += self.screen.get_block_size()
         self.body = [head] + self.body
         if not make_snake_longer:
             del self.body[-1]
@@ -75,16 +83,13 @@ class Food(object):
 
     def place_if_missing(self):
         if not self.exists():
-            width, height = self.screen.get_block_size()
+            block_size = self.screen.get_block_size()
             screen_size = self.screen.get_screen_size()
-            x = randint(0, screen_size[0]-width)
-            x = x - x % width # snap to grid
-            y = randint(0, screen_size[1]-height)
-            y = y - y % height
-            self.pos = pygame.Rect(x, y, width, height)
-
-def wall_hit(head, screen_size):
-    return head.x < 0 or head.x > screen_size[0] or head.y < 0 or head.y > screen_size[1]
+            x = randint(0, screen_size[0] - block_size)
+            x = x - x % block_size # snap to grid
+            y = randint(0, screen_size[1] - block_size)
+            y = y - y % block_size
+            self.pos = pygame.Rect(x, y, block_size, block_size)
 
 def snake_hit_food(head, food):
     return (head.x, head.y) == (food.x, food.y)
@@ -112,8 +117,8 @@ def advance_game(snake, food):
 
     snake.move_it(make_snake_longer)
 
-def is_game_over(snake, screen_size):
-    return wall_hit(snake.head(), screen_size) or snake.hit_itself()
+def is_game_over(snake):
+    return snake.hit_wall() or snake.hit_itself()
 
 def paint_snake(surface, snake):
     snake_color = (0, 204, 0)
@@ -135,7 +140,7 @@ def get_current_time():
 
 def play_game():
     pygame.init()
-    screen = Screen(10, 10, 600, 400)
+    screen = Screen(600, 400, 10)
     surface = pygame.display.set_mode(screen.get_screen_size())
     prev_time = None
     snake = Snake(screen)
@@ -155,15 +160,14 @@ def play_game():
             if not game_over:
                 advance_game(snake, food)
                 game_speed = min(food.get_total(), 20)
-                if is_game_over(snake, screen.get_screen_size()):
-                    game_over = True
+                game_over = is_game_over(snake)
             else:
                 bg_red += 30
                 if bg_red > 150: break
 
         # frame rendering
         surface.fill((bg_red, 0, 0))
-        text = "score={}, fps={}, speed={}".format(food.get_total(), len(frames), game_speed)
+        text = " score={}, fps={}, speed={}".format(food.get_total(), len(frames), game_speed)
         paint_text(surface, text)
         paint_snake(surface, snake)
         paint_food(surface, food)
