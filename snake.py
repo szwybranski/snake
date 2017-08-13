@@ -140,6 +140,7 @@ def get_current_time():
 
 def play_game():
     pygame.init()
+    pygame.display.set_caption("snake")
     screen = Screen(600, 400, 10)
     surface = pygame.display.set_mode(screen.get_screen_size())
     prev_time = None
